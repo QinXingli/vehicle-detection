@@ -593,7 +593,9 @@ def lane_process(img, visualization=False):
     # start detector or tracker to find the lanes
     ploty = np.linspace(0, binary_warped.shape[0]-1, binary_warped.shape[0])
     if left_lane.detected:  # start tracker
-        tracker(binary_sub, ploty, visualization)
+        # not track  ----QinXL 2021-10-09
+        # tracker(binary_sub, ploty, visualization)
+        tmp = 0
     else:  # start detector
         detector(binary_sub, ploty, visualization)
 

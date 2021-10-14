@@ -1,5 +1,7 @@
 # import numpy as np
-import tensorflow as tf
+# import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 # import cv2
 from timeit import default_timer as timer
 # import time
@@ -170,8 +172,9 @@ def draw_results(img, image_lane, yolo, fps, lane_info):
     img_cp = img.copy()
     results = yolo.result_list
 
+    # not draw the highlighted background (不显示图像中央的绿色道路标记) ----QinXL 2021-10-09
     # draw the highlighted background
-    img_cp = draw_background_highlight(img_cp, image_lane, yolo.w_img)
+    # img_cp = draw_background_highlight(img_cp, image_lane, yolo.w_img)
 
     window_list = []
     for i in range(len(results)):
@@ -179,12 +182,21 @@ def draw_results(img, image_lane, yolo, fps, lane_info):
         y = int(results[i][2])
         w = int(results[i][3])//2
         h = int(results[i][4])//2
-        cv2.rectangle(img_cp,(x-w,y-h),(x+w,y+h),(0,0,255),4)
-        cv2.rectangle(img_cp,(x-w,y-h-20),(x+w,y-h),(125,125,125),-1)
+
+        # if x-w < 0, error occur in cv:resize in draw_thumbnails  ----QinXL, 2021-10-09
+        x_w = x - w
+        if x_w < 0:
+            x_w = 0
+        y_h = y - h
+        if y_h < 0:
+            y_h = 0
+
+        cv2.rectangle(img_cp,(x_w,y_h),(x+w,y+h),(0,0,255),4)
+        cv2.rectangle(img_cp,(x_w,y_h-20),(x+w,y_h),(125,125,125),-1)
         # cv2.putText(img_cp,results[i][0] + ' : %.2f' % results[i][5],(x-w+5,y-h-7),cv2.FONT_HERSHEY_SIMPLEX,0.5,(255,255,0),1)
-        cv2.putText(img_cp,results[i][0],(x-w+5,y-h-7),cv2.FONT_HERSHEY_SIMPLEX,0.5,(255,255,0),1)
+        cv2.putText(img_cp,results[i][0],(x_w+5,y_h-7),cv2.FONT_HERSHEY_SIMPLEX,0.5,(255,255,0),1)
         if results[i][0] == "car" or results[i][0] == "bus":
-            window_list.append(((x-w,y-h),(x+w,y+h)))
+            window_list.append(((x_w,y_h),(x+w,y+h)))
 
     # draw vehicle thumbnails
     draw_thumbnails(img_cp, img, window_list)
